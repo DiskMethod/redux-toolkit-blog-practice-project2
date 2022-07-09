@@ -1,36 +1,14 @@
-import { createSlice, nanoid } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, nanoid } from "@reduxjs/toolkit";
+import axios from "axios";
 import { sub } from "date-fns";
 
-const initialState = [
-  {
-    id: "1",
-    title: "Learning Redux Toolkit",
-    content: "I've heard good things.",
-    userId: "1",
-    date: sub(new Date(), { minutes: 10 }).toISOString(),
-    reactions: {
-      thumbsUp: 0,
-      wow: 0,
-      heart: 0,
-      rocket: 0,
-      coffee: 0,
-    },
-  },
-  {
-    id: "2",
-    title: "Slices...",
-    content: "The more I say slice, the more I want pizza.",
-    userId: "0",
-    date: sub(new Date(), { minutes: 5 }).toISOString(),
-    reactions: {
-      thumbsUp: 0,
-      wow: 0,
-      heart: 0,
-      rocket: 0,
-      coffee: 0,
-    },
-  },
-];
+const POSTS_URL = "https://jsonplaceholder.typicode.com/posts";
+
+const initialState = {
+  posts: [],
+  status: "idle", // idle | loading | succeeded | failed
+  error: null,
+};
 
 const postsSlice = createSlice({
   name: "posts",
@@ -38,13 +16,13 @@ const postsSlice = createSlice({
   reducers: {
     postAdded: {
       reducer: (state, action) => {
-        state.push(action.payload);
+        state.posts.push(action.payload);
       },
       prepare: (title, content, userId) => ({
         payload: {
           id: nanoid(),
           title,
-          content,
+          body: content,
           userId,
           date: new Date().toISOString(),
           reactions: {
@@ -52,7 +30,7 @@ const postsSlice = createSlice({
             wow: 0,
             heart: 0,
             rocket: 0,
-            coffee: 0,
+            eyes: 0,
           },
         },
       }),
@@ -60,7 +38,7 @@ const postsSlice = createSlice({
     reactionAdded: {
       reducer: (state, action) => {
         const { postId, reaction } = action.payload;
-        const post = state.find((post) => post.id === postId);
+        const post = state.posts.find((post) => post.id === postId);
         post.reactions[reaction] += 1;
       },
       prepare: (postId, reaction) => ({
@@ -68,12 +46,74 @@ const postsSlice = createSlice({
       }),
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPosts.pending, (state, action) => {
+        state.status = "loading";
+      })
+      .addCase(fetchPosts.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        let min = 1;
+        const loadedPosts = action.payload.map((post) => {
+          post.date = sub(new Date(), { minutes: min++ }).toISOString();
+          post.reactions = {
+            thumbsUp: 0,
+            wow: 0,
+            heart: 0,
+            rocket: 0,
+            eyes: 0,
+          };
+          return post;
+        });
+        state.posts = loadedPosts;
+      })
+      .addCase(fetchPosts.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      })
+      .addCase(addNewPost.fulfilled, (state, action) => {
+        state.posts.push({
+          ...action.payload,
+          id: nanoid(),
+          userId: Number(action.payload.userId),
+          date: new Date().toISOString(),
+          reactions: {
+            thumbsUp: 0,
+            wow: 0,
+            heart: 0,
+            rocket: 0,
+            eyes: 0,
+          },
+        });
+      });
+  },
+});
+export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
+  try {
+    const response = await axios.get(POSTS_URL);
+    return [...response.data];
+  } catch (error) {
+    return error.message;
+  }
 });
 
-export const selectAllPosts = (state) => state.posts;
+export const addNewPost = createAsyncThunk("posts/addNewPost", async (post) => {
+  try {
+    const response = await axios.post(POSTS_URL, post);
+    return response.data;
+  } catch (error) {
+    return error.message;
+  }
+});
+
+export const selectAllPosts = (state) => state.posts.posts;
+
+export const getPostsStatus = (state) => state.posts.status;
+
+export const getPostsError = (state) => state.posts.error;
 
 export const selectPostById = (id) => (state) =>
-  state.posts.find((post) => post.id === id);
+  state.posts.posts.find((post) => post.id === id);
 
 export const { postAdded, reactionAdded } = postsSlice.actions;
 
