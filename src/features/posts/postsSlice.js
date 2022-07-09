@@ -85,6 +85,14 @@ const postsSlice = createSlice({
             eyes: 0,
           },
         });
+      })
+      .addCase(editPost.fulfilled, (state, action) => {
+        const { postId: id, body, title } = action.payload;
+        const post = state.posts.find((post) => {
+          return post.id === Number(id);
+        });
+        post.body = body;
+        post.title = title;
       });
   },
 });
@@ -106,6 +114,18 @@ export const addNewPost = createAsyncThunk("posts/addNewPost", async (post) => {
   }
 });
 
+export const editPost = createAsyncThunk("posts/editPost", async (newPost) => {
+  try {
+    const response = await axios.patch(
+      `${POSTS_URL}/${newPost.postId}`,
+      newPost
+    );
+    return response.data;
+  } catch (error) {
+    return error.message;
+  }
+});
+
 export const selectAllPosts = (state) => state.posts.posts;
 
 export const getPostsStatus = (state) => state.posts.status;
@@ -113,7 +133,7 @@ export const getPostsStatus = (state) => state.posts.status;
 export const getPostsError = (state) => state.posts.error;
 
 export const selectPostById = (id) => (state) =>
-  state.posts.posts.find((post) => post.id === id);
+  state.posts.posts.find((post) => post.id === Number(id));
 
 export const { postAdded, reactionAdded } = postsSlice.actions;
 
