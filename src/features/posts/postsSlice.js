@@ -72,6 +72,7 @@ const postsSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(addNewPost.fulfilled, (state, action) => {
+        console.log("WTF");
         state.posts.push({
           ...action.payload,
           id: nanoid(),
@@ -96,35 +97,44 @@ const postsSlice = createSlice({
       });
   },
 });
-export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
-  try {
-    const response = await axios.get(POSTS_URL);
-    return [...response.data];
-  } catch (error) {
-    return error.message;
+export const fetchPosts = createAsyncThunk(
+  "posts/fetchPosts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(POSTS_URL);
+      return [...response.data];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
-});
+);
 
-export const addNewPost = createAsyncThunk("posts/addNewPost", async (post) => {
-  try {
-    const response = await axios.post(POSTS_URL, post);
-    return response.data;
-  } catch (error) {
-    return error.message;
+export const addNewPost = createAsyncThunk(
+  "posts/addNewPost",
+  async (post, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(POSTS_URL, post);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
-});
+);
 
-export const editPost = createAsyncThunk("posts/editPost", async (newPost) => {
-  try {
-    const response = await axios.patch(
-      `${POSTS_URL}/${newPost.postId}`,
-      newPost
-    );
-    return response.data;
-  } catch (error) {
-    return error.message;
+export const editPost = createAsyncThunk(
+  "posts/editPost",
+  async (newPost, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(
+        `${POSTS_URL}/${newPost.postId}`,
+        newPost
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
-});
+);
 
 export const selectAllPosts = (state) => state.posts.posts;
 

@@ -24,11 +24,11 @@ const EditPostForm = () => {
     setContent(e.target.value);
   };
 
-  const onEditPostClicked = () => {
+  const onEditPostClicked = async () => {
     if (canEdit) {
       try {
         setRequestStatus("pending");
-        dispatch(editPost({ title, body: content, postId })).unwrap();
+        await dispatch(editPost({ title, body: content, postId })).unwrap();
         setTitle("");
         setContent("");
         navigate(`/post/${postId}`);

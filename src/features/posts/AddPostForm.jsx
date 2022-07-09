@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addNewPost } from "./postsSlice";
 import { selectAllUsers } from "../users/usersSlice";
+import { useNavigate } from "react-router-dom";
 
 const AddPostForm = () => {
   const [title, setTitle] = useState("");
@@ -9,6 +10,7 @@ const AddPostForm = () => {
   const [authorId, setAuthorId] = useState("");
   const [requestStatus, setRequestStatus] = useState("idle");
 
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
 
@@ -24,16 +26,17 @@ const AddPostForm = () => {
     setAuthorId(e.target.value);
   };
 
-  const onSavePostClicked = () => {
+  const onSavePostClicked = async () => {
     if (canSave) {
       try {
         setRequestStatus("pending");
-        dispatch(
+        await dispatch(
           addNewPost({ title, body: content, userId: authorId })
         ).unwrap();
         setTitle("");
         setContent("");
         setAuthorId("");
+        navigate("/");
       } catch (error) {
         console.error("Failed to save the post: ", error);
       } finally {
