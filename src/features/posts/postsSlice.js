@@ -37,8 +37,8 @@ const postsSlice = createSlice({
     },
     reactionAdded: {
       reducer: (state, action) => {
-        const { postId, reaction } = action.payload;
-        const post = state.posts.find((post) => post.id === postId);
+        const { postId: id, reaction } = action.payload;
+        const post = state.posts.find((post) => post.id === (Number(id) || id));
         post.reactions[reaction] += 1;
       },
       prepare: (postId, reaction) => ({
@@ -72,7 +72,6 @@ const postsSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(addNewPost.fulfilled, (state, action) => {
-        console.log("WTF");
         state.posts.push({
           ...action.payload,
           id: nanoid(),
@@ -90,10 +89,21 @@ const postsSlice = createSlice({
       .addCase(editPost.fulfilled, (state, action) => {
         const { postId: id, body, title } = action.payload;
         const post = state.posts.find((post) => {
-          return post.id === Number(id);
+          return post.id === (Number(id) || id);
         });
-        post.body = body;
-        post.title = title;
+        if (!post) {
+          console.error("Post not found in client cache");
+        } else {
+          post.body = body;
+          post.title = title;
+          post.date = new Date().toISOString();
+        }
+      })
+      .addCase(deletePost.fulfilled, (state, action) => {
+        const { postId: id } = action.payload;
+        state.posts = state.posts.filter(
+          (post) => post.id !== (Number(id) || id)
+        );
       });
   },
 });
@@ -102,7 +112,7 @@ export const fetchPosts = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(POSTS_URL);
-      return [...response.data];
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -129,6 +139,18 @@ export const editPost = createAsyncThunk(
         `${POSTS_URL}/${newPost.postId}`,
         newPost
       );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const deletePost = createAsyncThunk(
+  "posts/deletePost",
+  async (postId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`${POSTS_URL}/${postId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message);
