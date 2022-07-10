@@ -28,14 +28,17 @@ const usersSlice = createSlice({
   },
 });
 
-export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
-  try {
-    const response = await axios.get(USERS_URL);
-    return [...response.data];
-  } catch (error) {
-    return error.message;
+export const fetchUsers = createAsyncThunk(
+  "users/fetchUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(USERS_URL);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
-});
+);
 
 export const getUsersStatus = (state) => state.users.status;
 
