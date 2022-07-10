@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { selectPostById } from "./postsSlice";
-import { editPost } from "./postsSlice";
+import { selectPostById, editPost, deletePost } from "./postsSlice";
 
 const EditPostForm = () => {
   const { postId } = useParams();
@@ -40,6 +39,20 @@ const EditPostForm = () => {
     }
   };
 
+  const onDeletePostClicked = async () => {
+    try {
+      setRequestStatus("pending");
+      await dispatch(deletePost(postId)).unwrap();
+      setTitle("");
+      setContent("");
+      navigate(`/`);
+    } catch (error) {
+      console.error("Failed to edit the post: ", error);
+    } finally {
+      setRequestStatus("idle");
+    }
+  };
+
   const canEdit = [title, content].every(Boolean) && requestStatus === "idle";
 
   return (
@@ -65,6 +78,9 @@ const EditPostForm = () => {
         </button>
         <button type="button" onClick={() => navigate(`/post/${postId}`)}>
           Close Edit
+        </button>
+        <button type="button" onClick={onDeletePostClicked}>
+          Delete Post
         </button>
       </form>
     </section>
