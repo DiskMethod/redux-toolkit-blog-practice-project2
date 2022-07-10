@@ -45,7 +45,7 @@ const EditPostForm = () => {
       await dispatch(deletePost(postId)).unwrap();
       setTitle("");
       setContent("");
-      navigate(`/`);
+      navigate("/");
     } catch (error) {
       console.error("Failed to edit the post: ", error);
     } finally {
@@ -79,7 +79,11 @@ const EditPostForm = () => {
         <button type="button" onClick={() => navigate(`/post/${postId}`)}>
           Close Edit
         </button>
-        <button type="button" onClick={onDeletePostClicked}>
+        <button
+          className="deleteButton"
+          type="button"
+          onClick={onDeletePostClicked}
+        >
           Delete Post
         </button>
       </form>

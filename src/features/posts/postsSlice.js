@@ -165,7 +165,7 @@ export const getPostsStatus = (state) => state.posts.status;
 export const getPostsError = (state) => state.posts.error;
 
 export const selectPostById = (id) => (state) =>
-  state.posts.posts.find((post) => post.id === Number(id));
+  state.posts.posts.find((post) => post.id === (Number(id) || id));
 
 export const { postAdded, reactionAdded } = postsSlice.actions;
 
