@@ -47,6 +47,6 @@ export const getUsersError = (state) => state.users.error;
 export const selectAllUsers = (state) => state.users.users;
 
 export const selectUserById = (id) => (state) =>
-  state.users.users.find((user) => user.id === id);
+  state.users.users.find((user) => user.id === (Number(id) || id));
 
 export default usersSlice.reducer;

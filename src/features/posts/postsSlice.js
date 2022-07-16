@@ -1,4 +1,9 @@
-import { createSlice, createAsyncThunk, nanoid } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+  nanoid,
+  createSelector,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 import { sub } from "date-fns";
 
@@ -8,33 +13,13 @@ const initialState = {
   posts: [],
   status: "idle", // idle | loading | succeeded | failed
   error: null,
+  count: 0,
 };
 
 const postsSlice = createSlice({
   name: "posts",
   initialState,
   reducers: {
-    postAdded: {
-      reducer: (state, action) => {
-        state.posts.push(action.payload);
-      },
-      prepare: (title, content, userId) => ({
-        payload: {
-          id: nanoid(),
-          title,
-          body: content,
-          userId,
-          date: new Date().toISOString(),
-          reactions: {
-            thumbsUp: 0,
-            wow: 0,
-            heart: 0,
-            rocket: 0,
-            eyes: 0,
-          },
-        },
-      }),
-    },
     reactionAdded: {
       reducer: (state, action) => {
         const { postId: id, reaction } = action.payload;
@@ -44,6 +29,9 @@ const postsSlice = createSlice({
       prepare: (postId, reaction) => ({
         payload: { postId, reaction },
       }),
+    },
+    increaseCount: (state, action) => {
+      state.count += 1;
     },
   },
   extraReducers: (builder) => {
@@ -164,9 +152,17 @@ export const getPostsStatus = (state) => state.posts.status;
 
 export const getPostsError = (state) => state.posts.error;
 
+export const getCount = (state) => state.posts.count;
+
 export const selectPostById = (id) => (state) =>
   state.posts.posts.find((post) => post.id === (Number(id) || id));
 
-export const { postAdded, reactionAdded } = postsSlice.actions;
+export const selectPostsByUser = createSelector(
+  [selectAllPosts, (_, userId) => userId],
+  (posts, userId) =>
+    posts.filter((post) => post.userId === (Number(userId) || userId))
+);
+
+export const { increaseCount, reactionAdded } = postsSlice.actions;
 
 export default postsSlice.reducer;
