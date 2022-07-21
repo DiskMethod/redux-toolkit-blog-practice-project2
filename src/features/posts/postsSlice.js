@@ -95,6 +95,7 @@ const postsSlice = createSlice({
       });
   },
 });
+
 export const fetchPosts = createAsyncThunk(
   "posts/fetchPosts",
   async (_, { rejectWithValue }) => {
