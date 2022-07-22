@@ -1,7 +1,5 @@
 import React, { useCallback } from "react";
 import { NavLink } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { increaseCount, getCount } from "../features/posts/postsSlice";
 
 const Header = () => {
   const navStyle = useCallback(({ isActive }) => {
@@ -10,10 +8,6 @@ const Header = () => {
       textDecoration: isActive ? "underline" : "none",
     };
   }, []);
-
-  const dispatch = useDispatch();
-  const count = useSelector(getCount);
-
   return (
     <header className="header">
       <h1>Redux Blog</h1>
@@ -35,7 +29,6 @@ const Header = () => {
             </NavLink>
           </li>
         </ul>
-        <button onClick={() => dispatch(increaseCount())}>{count}</button>
       </nav>
     </header>
   );

@@ -1,19 +1,25 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { selectPostById, editPost, deletePost } from "./postsSlice";
+import { useSelector } from "react-redux";
+import { selectPostById } from "./postsSlice";
+import {
+  useUpdatePostMutation,
+  useDeletePostMutation,
+  useGetPostsQuery,
+} from "./postsSlice";
 
 const EditPostForm = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
 
   const post = useSelector(selectPostById(postId));
+  const { refetch } = useGetPostsQuery();
 
   const [title, setTitle] = useState(post?.title);
   const [content, setContent] = useState(post?.body);
-  const [requestStatus, setRequestStatus] = useState("idle");
 
-  const dispatch = useDispatch();
+  const [editPost, { isLoadingEditPost }] = useUpdatePostMutation();
+  const [deletePost, { isLoadingDeletePost }] = useDeletePostMutation();
 
   const onTitleChanged = (e) => {
     setTitle(e.target.value);
@@ -26,34 +32,32 @@ const EditPostForm = () => {
   const onEditPostClicked = async () => {
     if (canEdit) {
       try {
-        setRequestStatus("pending");
-        await dispatch(editPost({ title, body: content, postId })).unwrap();
+        await editPost({ title, body: content, postId }).unwrap();
+        refetch();
         setTitle("");
         setContent("");
         navigate(`/post/${postId}`);
       } catch (error) {
         console.error("Failed to edit the post: ", error);
-      } finally {
-        setRequestStatus("idle");
       }
     }
   };
 
   const onDeletePostClicked = async () => {
     try {
-      setRequestStatus("pending");
-      await dispatch(deletePost(postId)).unwrap();
+      await deletePost({ postId }).unwrap();
       setTitle("");
       setContent("");
       navigate("/");
     } catch (error) {
       console.error("Failed to edit the post: ", error);
-    } finally {
-      setRequestStatus("idle");
     }
   };
 
-  const canEdit = [title, content].every(Boolean) && requestStatus === "idle";
+  const canEdit =
+    [title, content].every(Boolean) &&
+    !isLoadingEditPost &&
+    !isLoadingDeletePost;
 
   return (
     <section>

@@ -9,6 +9,7 @@ import ReactionButtons from "./ReactionButtons";
 
 const SinglePostPage = () => {
   const { postId } = useParams();
+
   const post = useSelector(selectPostById(postId));
 
   if (!post) {
